@@ -120,3 +120,13 @@
     @apply bg-background text-foreground;
   }
 }
+
+.viewer-canvas > img {
+  background-color: white !important;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.strategy-table-header  > button{
+  padding: 0 !important;
+}

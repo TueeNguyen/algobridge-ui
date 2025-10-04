@@ -1,4 +1,4 @@
-type StrategyDTO = {
+interface Strategy {
   // url: str
   // name: str
   // composer_id: str
@@ -15,3 +15,17 @@ type StrategyDTO = {
   holdings: Array<{ [key: string]: any }>; // Adjusted to use an array of objects
   id: string; // Added id field for key in React list rendering
 };
+
+interface StrategySummary {
+  id: string;
+  name: string;
+  composer_id: string;
+  composer_created_at: string; // ISO date string
+}
+
+interface SearchResult {
+  pages: number;
+  page: number;
+  count: number;
+  data: Strategy[];
+}

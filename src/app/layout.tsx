@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "react-photo-view/dist/react-photo-view.css";
 import { Header } from "@/components/layouts/header";
+
+import QueryClientProvider from "./providers/reactQueryProvider";
+import QueryProvider from "./providers/reactQueryProvider";
+import { ThemeProvider } from "./providers/themeProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  weight: "400",
 });
 
 const geistMono = Geist_Mono({
@@ -24,13 +31,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Header />
-        <main>{children}</main>
-      </body>
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      suppressHydrationWarning
+    >
+      <QueryProvider>
+        <body>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            disableTransitionOnChange
+          >
+            <Header />
+            <Toaster />
+            <main className="p-4">
+              {children}
+            </main>
+          </ThemeProvider>
+        </body>
+      </QueryProvider>
     </html>
   );
 }

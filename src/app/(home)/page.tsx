@@ -1,16 +1,42 @@
-import Image from "next/image";
-import { DataTable, strategyColumns } from "./strategies-table";
+import EmailForm from "./email-form";
+
 import { Suspense } from "react";
+import { TablePagination } from "./pagination";
+import { Search } from "./search";
+import { StrategiesTable } from "@/components/ui/app/strategies-table";
 
-export default async function Home() {
-  const strategies = await fetch("http://localhost:8000/strategies");
-  const strategiesData = await strategies.json();
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ name?: string; page?: number }>;
+}) {
+  const { name, page } = await searchParams;
+  const url = new URL(
+    "/api/external/strategies/search",
+    process.env.NEXT_PUBLIC_BASE_URL
+  );
+  if (name) {
+    url.searchParams.append("name", name);
+  }
+  if (page) {
+    url.searchParams.append("page", page.toString());
+  }
 
+  const result = await fetch(url);
+  const searchResult: SearchResult = await result.json();
+  console.debug("Fetched search result:", searchResult);
   return (
-    <div>
-      <h1>Strategies</h1>
+    <div className="flex flex-col gap-4 mx-auto">
+      <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0">
+        Strategies
+      </h2>
+      <Search />
       <Suspense fallback={<p>Loading strategies...</p>}>
-        <DataTable data={strategiesData} columns={strategyColumns} />
+        <StrategiesTable
+          headers={["name", "composer_created_at", "tools"]}
+          data={searchResult.data}
+        />
+        <TablePagination searchResult={searchResult} />
       </Suspense>
     </div>
   );

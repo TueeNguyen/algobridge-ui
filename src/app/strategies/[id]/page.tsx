@@ -1,17 +1,53 @@
-export default async function StrategiesPage() {
-  const strategy = await fetch(
-    "http://localhost:8000/strategies/6ZmvlOYcRH23MKF0AqoV"
-  );
-  const strategyData: StrategyDTO = await strategy.json();
+import { json } from "zod";
+import { Mermaid } from "./mermaid";
+import { HoldingsTable } from "./holdings-table";
+import { formatDate } from "@/lib/utils";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { IconLink } from "@tabler/icons-react";
 
+export default async function StrategiesPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  params = await params;
+  const url = new URL(
+    `/api/external/strategies/${params.id}`,
+    process.env.NEXT_PUBLIC_BASE_URL
+  );
+  const strategy = await fetch(url);
+  const strategyData: Strategy = await strategy.json();
+  // console.debug("Fetched strategy data:", strategyData.holdings[0]);
   return (
-    <div>
-      <h1>{strategyData.name}</h1>
-      <p>
-        Created at:{" "}
-        {new Date(strategyData.composer_created_at).toLocaleDateString()}
-      </p>
-      <p>Version: {strategyData.version_id}</p>
+    <div className="flex flex-col gap-1 mx-auto p-4">
+      <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0">
+        {strategyData.name}
+      </h2>
+      <br />
+
+      <Button
+        variant="secondary"
+        className="w-fit hover:opacity-60 border border-gray-400 rounded-3xl dark:border-gray-600"
+        asChild
+        size="sm"
+      >
+        <Link href={strategyData.url || "#"} target="_blank">
+          <IconLink />
+          View in Composer&nbsp;
+        </Link>
+      </Button>
+
+      <div>
+        Out of sample date:&nbsp;
+        {formatDate(strategyData.composer_created_at)}{" "}
+        <span className="mb-2 text-sm text-muted-foreground">
+          Version: {strategyData.version_id}
+        </span>
+      </div>
+
+      <br />
+      <HoldingsTable holdings={strategyData.holdings} />
     </div>
   );
 }
