@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import "react-photo-view/dist/react-photo-view.css";
 import { Header } from "@/components/layouts/header";
 
-import QueryClientProvider from "./providers/reactQueryProvider";
 import QueryProvider from "./providers/reactQueryProvider";
 import { ThemeProvider } from "./providers/themeProvider";
 import { Toaster } from "@/components/ui/sonner";
@@ -45,9 +43,7 @@ export default function RootLayout({
           >
             <Header />
             <Toaster />
-            <main className="p-4">
-              {children}
-            </main>
+            <main className="p-4">{children}</main>
           </ThemeProvider>
         </body>
       </QueryProvider>

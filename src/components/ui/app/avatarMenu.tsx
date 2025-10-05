@@ -8,17 +8,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { IconMenu2, IconMoonFilled, IconSunFilled } from "@tabler/icons-react";
+import { useTheme } from "next-themes";
+import { useLocalStorage } from "usehooks-ts";
 import { Avatar, AvatarFallback, AvatarImage } from "../avatar";
 import { Label } from "../label";
 import { Switch } from "../switch";
-import { useTheme } from "next-themes";
-import { getSetting, setSetting } from "@/lib/settings";
-import { useLocalStorage } from 'usehooks-ts'
 
 export const AvatarMenu = () => {
   const imageUrl = "";
   const { setTheme } = useTheme();
-  const [inAppDiagramView, setInAppDiagramView] = useLocalStorage("inAppDiagramView", false, {initializeWithValue: false});
+  const [inAppDiagramView, setInAppDiagramView] = useLocalStorage(
+    "inAppDiagramView",
+    false,
+    { initializeWithValue: false }
+  );
 
   return (
     <div>

@@ -1,9 +1,7 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { useDebounce } from "@uidotdev/usehooks";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 
 export const Search = () => {

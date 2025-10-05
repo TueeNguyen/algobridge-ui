@@ -17,13 +17,14 @@ import {
 import { formatDate, stringCompare } from "@/lib/utils";
 import { IconCopy, IconPhoto } from "@tabler/icons-react";
 import mermaid from "mermaid";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLocalStorage } from "usehooks-ts";
 import Viewer from "viewerjs";
 import "viewerjs/dist/viewer.css";
 
 interface HoldingsTableProps {
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   holdings: Array<{ [key: string]: any }>;
 }
 
@@ -90,6 +91,7 @@ export const HoldingsTable = ({ holdings }: HoldingsTableProps) => {
     toast("Mermaid code copied to clipboard");
   };
 
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   const tableCellDisplay = (head: string, holding: any, index: number) => {
     if (stringCompare(head, "Date")) {
       return formatDate(holding[head]);
@@ -135,7 +137,8 @@ export const HoldingsTable = ({ holdings }: HoldingsTableProps) => {
     return `${holding[head]}%`;
   };
 
-  const tableBodyRows = holdings.map((holding: any, index) => {
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const tableBodyRows = holdings.map((holding: any, index: number) => {
     return (
       <TableRow key={index}>
         {tableHeads.map((head) => {

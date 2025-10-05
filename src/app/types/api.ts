@@ -12,9 +12,10 @@ interface Strategy {
   composer_created_at: string; // ISO date string
   version_id: string;
   last_modified_utc: string; // ISO date string
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   holdings: Array<{ [key: string]: any }>; // Adjusted to use an array of objects
   id: string; // Added id field for key in React list rendering
-};
+}
 
 interface StrategySummary {
   id: string;

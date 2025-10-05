@@ -1,12 +1,11 @@
 "use client";
 
-import React from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useCreateStrategy } from "@/hooks/useCreateStrategy";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 const linkOrIdSchema = z.object({
   linkOrId: z
@@ -49,12 +48,14 @@ export type LinkOrIdFormProps = {
 
 export default function LinkOrIdForm({
   defaultValue = "",
-  onSubmit,
   className,
   setDialogOpen,
 }: LinkOrIdFormProps) {
-
-  const { mutate: createStrategy, isPending, isError, isSuccess } = useCreateStrategy({
+  const {
+    mutate: createStrategy,
+    isPending,
+    isError,
+  } = useCreateStrategy({
     onSuccess: () => setDialogOpen?.(false),
     redirectOnSuccess: true,
   });

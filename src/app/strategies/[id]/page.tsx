@@ -1,10 +1,8 @@
-import { json } from "zod";
-import { Mermaid } from "./mermaid";
-import { HoldingsTable } from "./holdings-table";
-import { formatDate } from "@/lib/utils";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { formatDate } from "@/lib/utils";
 import { IconLink } from "@tabler/icons-react";
+import Link from "next/link";
+import { HoldingsTable } from "./holdings-table";
 
 export default async function StrategiesPage({
   params,

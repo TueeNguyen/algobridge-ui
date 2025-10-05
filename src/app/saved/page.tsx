@@ -1,4 +1,3 @@
-import { StrategiesTable } from "@/components/ui/app/strategies-table";
 import { Suspense } from "react";
 import { ClientStrategiesTable } from "./client-strategies-table";
 

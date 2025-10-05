@@ -1,5 +1,3 @@
-import EmailForm from "./email-form";
-
 import { Suspense } from "react";
 import { TablePagination } from "./pagination";
 import { Search } from "./search";

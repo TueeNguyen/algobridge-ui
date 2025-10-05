@@ -1,9 +1,7 @@
 import Link from "next/link";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "../ui/button";
-import { IconPlus } from "@tabler/icons-react";
 import { AddComposerButton } from "../ui/app/addComposerButton";
 import { AvatarMenu } from "../ui/app/avatarMenu";
+import { Button } from "../ui/button";
 // Server Component - renders static parts
 export function Header() {
   return (
