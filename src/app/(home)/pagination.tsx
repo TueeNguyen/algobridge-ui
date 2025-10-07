@@ -36,7 +36,7 @@ export const TablePagination = ({
   };
 
   const handlePaginationNav = (type: "next" | "previous") => {
-    console.debug({ active: pagination.active, range: pagination.range, type });
+    // console.debug({ active: pagination.active, range: pagination.range, type });
     if (type === "next" && pagination.active < pagination.range.length + 1) {
       handlePageClick(pagination.active + 1);
     } else if (type === "previous" && pagination.active > 1) {
@@ -46,11 +46,15 @@ export const TablePagination = ({
   const cursorStyle = "cursor-pointer";
   return (
     <Pagination>
-      <PaginationPrevious className={cursorStyle} onClick={() => handlePaginationNav("previous")} />
+      <PaginationPrevious
+        className={cursorStyle}
+        onClick={() => handlePaginationNav("previous")}
+      />
       <PaginationContent>
         {pagination.range.map((item, index) => (
           <PaginationItem key={index}>
-            <PaginationLink className={cursorStyle}
+            <PaginationLink
+              className={cursorStyle}
               isActive={pagination.active === index + 1}
               onClick={() => {
                 handlePageClick(
@@ -63,7 +67,10 @@ export const TablePagination = ({
           </PaginationItem>
         ))}
       </PaginationContent>
-      <PaginationNext className={cursorStyle} onClick={() => handlePaginationNav("next")} />
+      <PaginationNext
+        className={cursorStyle}
+        onClick={() => handlePaginationNav("next")}
+      />
     </Pagination>
   );
 };

@@ -38,7 +38,7 @@ export default async function StrategiesPage({
 
       <div>
         Out of sample date:&nbsp;
-        {formatDate(strategyData.composer_created_at)}{" "}
+        {formatDate(strategyData.composer_created_at)}
         <span className="mb-2 text-sm text-muted-foreground">
           Version: {strategyData.version_id}
         </span>

@@ -22,7 +22,7 @@ export default async function Home({
 
   const result = await fetch(url);
   const searchResult: SearchResult = await result.json();
-  console.debug("Fetched search result:", searchResult);
+  // console.debug("Fetched search result:", searchResult);
   return (
     <div className="flex flex-col gap-4 mx-auto">
       <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0">
