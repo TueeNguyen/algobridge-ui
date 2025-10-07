@@ -23,22 +23,34 @@ export default async function StrategiesPage({
         {strategyData.name}
       </h2>
       <br />
-
-      <Button
-        variant="secondary"
-        className="w-fit hover:opacity-60 border border-gray-400 rounded-3xl dark:border-gray-600"
-        asChild
-        size="sm"
-      >
-        <Link href={strategyData.url || "#"} target="_blank">
-          <IconLink />
-          View in Composer&nbsp;
-        </Link>
-      </Button>
+      <div className="flex flex-row gap-2">
+        <Button
+          variant="secondary"
+          className="w-fit hover:opacity-60 border border-gray-400 rounded-3xl dark:border-gray-600"
+          asChild
+          size="sm"
+        >
+          <Link href={strategyData.url || "#"} target="_blank">
+            <IconLink />
+            View in Composer&nbsp;
+          </Link>
+        </Button>
+        <Button
+          variant="ghost"
+          className="w-fit hover:opacity-60 border border-gray-400 rounded-3xl dark:border-gray-600"
+          asChild
+          size="sm"
+        >
+          <Link href={"https://www.mermaidchart.com/play"} target="_blank">
+            <IconLink />
+            Mermaid playground&nbsp;
+          </Link>
+        </Button>
+      </div>
 
       <div>
         Out of sample date:&nbsp;
-        {formatDate(strategyData.composer_created_at)}
+        {formatDate(strategyData.composer_created_at)} | &nbsp;
         <span className="mb-2 text-sm text-muted-foreground">
           Version: {strategyData.version_id}
         </span>
