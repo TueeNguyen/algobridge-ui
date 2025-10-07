@@ -55,6 +55,7 @@ export default function LinkOrIdForm({
     mutate: createStrategy,
     isPending,
     isError,
+    error,
   } = useCreateStrategy({
     onSuccess: () => setDialogOpen?.(false),
     redirectOnSuccess: true,
@@ -96,7 +97,7 @@ export default function LinkOrIdForm({
       )}
       {isError && (
         <p className="mt-2 text-sm text-destructive" role="alert">
-          Something went wrong. Please try again.
+          {error?.message || "Something went wrong. Please try again."}
         </p>
       )}
     </form>

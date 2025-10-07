@@ -2,11 +2,34 @@
 
 import { axiosInstance } from "@/lib/axios";
 import { useMutation } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 
 const createStrategy = async (linkOrId: string) => {
-  const response = await axiosInstance.post("/strategies", { linkOrId });
-  return response.data;
+  try {
+    const response = await axiosInstance.post("/strategies", { linkOrId });
+    return response.data;
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      if (error.response?.status === 422) {
+        const errorMessage =
+          error.response?.data?.detail ||
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Validation error occurred";
+        throw new Error(errorMessage);
+      }
+
+      // Handle other HTTP errors
+      const message =
+        error.response?.data?.detail ||
+        error.response?.data?.message ||
+        error.message ||
+        "Something went wrong";
+      throw new Error(message);
+    }
+    throw error;
+  }
 };
 
 interface UseCreateStrategyOptions {
@@ -31,6 +54,7 @@ export const useCreateStrategy = (
       }
     },
     onError: (error) => {
+      console.error("Create strategy error:", error.message);
       if (options.onError) {
         options.onError(error);
       }
