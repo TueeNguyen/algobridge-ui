@@ -7,6 +7,7 @@ import QueryProvider from "./providers/reactQueryProvider";
 import { ThemeProvider } from "./providers/themeProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
+import { ClerkProvider } from "@clerk/nextjs";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,24 +33,24 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      suppressHydrationWarning
-    >
-      <QueryProvider>
-        <body>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            disableTransitionOnChange
-          >
-            <Header />
-            <Toaster />
-            <main className="p-4">
-              {children} <Analytics />
-            </main>
-          </ThemeProvider>
-        </body>
-      </QueryProvider>
+      className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}
+      suppressHydrationWarning>
+      <body>
+        <ClerkProvider>
+          <QueryProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              disableTransitionOnChange>
+              <Header />
+              <Toaster />
+              <main className="p-4">
+                {children} <Analytics />
+              </main>
+            </ThemeProvider>
+          </QueryProvider>
+        </ClerkProvider>
+      </body>
     </html>
   );
 }
