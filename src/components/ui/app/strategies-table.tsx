@@ -10,7 +10,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDate } from "@/lib/utils";
-import { IconBookmark, IconBookmarkFilled } from "@tabler/icons-react";
+import {
+  IconBookmark,
+  IconBookmarkFilled,
+  IconMail,
+  IconMailFilled,
+} from "@tabler/icons-react";
 import {
   ColumnDef,
   Row,
@@ -21,18 +26,26 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
+import { AfterContext } from "next/dist/server/after/after-context";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useLocalStorage } from "usehooks-ts";
 
-export type StrategiesTableHeaders = "name" | "composer_created_at" | "tools";
+export type StrategiesTableHeaders =
+  | "name"
+  | "composer_created_at"
+  | "email"
+  | "save";
 
 export interface StrategiesTableProps {
   headers: StrategiesTableHeaders[];
   data: Strategy[];
 }
 
-export function StrategiesTable({ headers, data }: StrategiesTableProps) {
+export function StrategiesTable({
+  headers,
+  data,
+}: StrategiesTableProps): React.ReactNode {
   const [savedStrategies, setSavedStrategies] = useLocalStorage<string[]>(
     "savedStrategies",
     [],
@@ -41,6 +54,24 @@ export function StrategiesTable({ headers, data }: StrategiesTableProps) {
     }
   );
 
+  const [emailStrategies, setEmailStrategies] = useLocalStorage<string[]>(
+    "emailStrategies",
+    [],
+    {
+      initializeWithValue: false,
+    }
+  );
+  // Handling tools click (email, tool)
+  const handleEmailClick = (e: React.MouseEvent, strategy: Strategy) => {
+    e.stopPropagation();
+    if (emailStrategies.includes(strategy.composer_id)) {
+      setEmailStrategies((prev) =>
+        prev.filter((id) => id !== strategy.composer_id)
+      );
+      return;
+    }
+    setEmailStrategies((prev) => [...prev, strategy.composer_id]);
+  };
   const handleSaveClicked = (e: React.MouseEvent, strategy: Strategy) => {
     e.stopPropagation();
     if (savedStrategies.includes(strategy.composer_id)) {
@@ -52,6 +83,7 @@ export function StrategiesTable({ headers, data }: StrategiesTableProps) {
     setSavedStrategies((prev) => [...prev, strategy.composer_id]);
   };
 
+  // COLUMNS
   const getColumns = () => {
     const columns: ColumnDef<Strategy>[] = [];
     if (headers.includes("name")) {
@@ -60,8 +92,9 @@ export function StrategiesTable({ headers, data }: StrategiesTableProps) {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
+            onClick={() =>
+              column.toggleSorting(column.getIsSorted() === "asc")
+            }>
             Name
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
@@ -74,8 +107,9 @@ export function StrategiesTable({ headers, data }: StrategiesTableProps) {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
+            onClick={() =>
+              column.toggleSorting(column.getIsSorted() === "asc")
+            }>
             Out of Sample Date
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
@@ -84,9 +118,31 @@ export function StrategiesTable({ headers, data }: StrategiesTableProps) {
       });
     }
 
-    if (headers.includes("tools")) {
+    //~
+    if (headers.includes("email")) {
       columns.push({
-        accessorKey: "tools",
+        accessorKey: "email",
+        header: "",
+        cell: ({ row }) => (
+          <Button
+            variant="secondary"
+            size="sm"
+            className="hover:opacity-60 rounded-2xl border border-gray-400 dark:border-gray-600"
+            onClick={(e) => {
+              handleEmailClick(e, row.original);
+            }}>
+            {emailStrategies.includes(row.original.composer_id) ? (
+              <IconMailFilled style={{ width: 12, height: 12 }} />
+            ) : (
+              <IconMail style={{ width: 12, height: 12 }} />
+            )}
+          </Button>
+        ),
+      });
+    }
+    if (headers.includes("save")) {
+      columns.push({
+        accessorKey: "save",
         header: "",
         cell: ({ row }) => (
           <Button
@@ -95,8 +151,7 @@ export function StrategiesTable({ headers, data }: StrategiesTableProps) {
             className="hover:opacity-60 rounded-2xl border border-gray-400 dark:border-gray-600"
             onClick={(e) => {
               handleSaveClicked(e, row.original);
-            }}
-          >
+            }}>
             {savedStrategies.includes(row.original.composer_id) ? (
               <IconBookmarkFilled style={{ width: 12, height: 12 }} />
             ) : (
@@ -136,8 +191,7 @@ export function StrategiesTable({ headers, data }: StrategiesTableProps) {
               {headerGroup.headers.map((header) => (
                 <TableHead
                   key={header.id}
-                  className="border-gray-300 bg-gray-100 font-bold dark:bg-neutral-800 strategy-table-header"
-                >
+                  className="border-gray-300 bg-gray-100 font-bold dark:bg-neutral-800 strategy-table-header">
                   {flexRender(
                     header.column.columnDef.header,
                     header.getContext()
@@ -152,16 +206,16 @@ export function StrategiesTable({ headers, data }: StrategiesTableProps) {
             <TableRow
               onClick={() => handleRowClick(row)}
               key={row.id}
-              className="hover:bg-muted/50 cursor-pointer"
-            >
+              className="hover:bg-muted/50 cursor-pointer">
               {row.getVisibleCells().map((cell) => {
                 return (
                   <TableCell
                     className={
-                      cell.column.id === "tools" ? "flex justify-end" : ""
+                      ["email", "save"].includes(cell.column.id)
+                        ? "flex justify-end"
+                        : ""
                     }
-                    key={cell.id}
-                  >
+                    key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 );
