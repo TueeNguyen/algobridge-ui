@@ -25,11 +25,20 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
-import { AfterContext } from "next/dist/server/after/after-context";
+import { ArrowUpDown, Subscript } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocalStorage } from "usehooks-ts";
+import { useUser } from "@clerk/nextjs";
+import { getRegisteredEmailStrategyList } from "@/lib/getRegisteredEmailStrategyList";
+import updateStrategyEmail from "@/lib/registerDailyEmail";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@radix-ui/react-tooltip";
+import { ToolButton } from "./email-button";
+import { EmailAlert } from "./email-alert";
 
 export type StrategiesTableHeaders =
   | "name"
@@ -46,6 +55,18 @@ export function StrategiesTable({
   headers,
   data,
 }: StrategiesTableProps): React.ReactNode {
+  const [alertEmailList, setAlertEmailList] = useState<Strategy[]>([]);
+
+  const [userEmail, setUserEmail] = useState<string | undefined>();
+  const { isSignedIn, isLoaded, user } = useUser();
+  if ((!isSignedIn && !isLoaded) || !user) {
+    headers = headers.filter((x) => x !== "email");
+    // setting user email
+  }
+  // email and saved strategies
+  const [emailStrategies, setEmailStrategies] = useState<string[]>([]);
+  console.log(emailStrategies);
+
   const [savedStrategies, setSavedStrategies] = useLocalStorage<string[]>(
     "savedStrategies",
     [],
@@ -54,24 +75,55 @@ export function StrategiesTable({
     }
   );
 
-  const [emailStrategies, setEmailStrategies] = useLocalStorage<string[]>(
-    "emailStrategies",
-    [],
-    {
-      initializeWithValue: false,
+  useEffect(() => {
+    if (user?.primaryEmailAddress?.emailAddress) {
+      setUserEmail(user.primaryEmailAddress.emailAddress);
     }
-  );
+  }, [user]);
+  // fetching list of email that user want to receive email notification from
+  useEffect(() => {
+    const fetchEmailStrategies = async () => {
+      const emailStrategyList: string[] | undefined =
+        await getRegisteredEmailStrategyList(userEmail);
+      if (emailStrategyList) setEmailStrategies(emailStrategyList);
+    };
+
+    fetchEmailStrategies();
+  }, [userEmail]);
+
   // Handling tools click (email, tool)
-  const handleEmailClick = (e: React.MouseEvent, strategy: Strategy) => {
-    e.stopPropagation();
-    if (emailStrategies.includes(strategy.composer_id)) {
-      setEmailStrategies((prev) =>
-        prev.filter((id) => id !== strategy.composer_id)
+  const handleEmailClick = async (e: React.MouseEvent, strategy: Strategy) => {
+    if (headers.includes("email") && userEmail) {
+      e.stopPropagation();
+
+      // perdicate whether to sub or unsub
+      const isCurrentlySubscribed = emailStrategies.includes(
+        strategy.composer_id
       );
-      return;
+      // update strategy
+      const { subscribeStatus } = await updateStrategyEmail(
+        userEmail,
+        strategy.composer_id,
+        !isCurrentlySubscribed
+      );
+
+      if (!subscribeStatus) {
+        setEmailStrategies((prev) =>
+          prev.filter((id) => id !== strategy.composer_id)
+        );
+        return;
+      }
+      setEmailStrategies((prev) => [...prev, strategy.composer_id]);
+
+      setAlertEmailList((prev) => {
+        if (prev.length >= 2) {
+          return [...prev.slice(0, -1), strategy];
+        }
+        return [...prev, strategy];
+      });
     }
-    setEmailStrategies((prev) => [...prev, strategy.composer_id]);
   };
+
   const handleSaveClicked = (e: React.MouseEvent, strategy: Strategy) => {
     e.stopPropagation();
     if (savedStrategies.includes(strategy.composer_id)) {
@@ -118,46 +170,40 @@ export function StrategiesTable({
       });
     }
 
-    //~
-    if (headers.includes("email")) {
+    // Combine email and save into one actions column
+    if (headers.includes("email") || headers.includes("save")) {
       columns.push({
-        accessorKey: "email",
+        id: "actions",
         header: "",
         cell: ({ row }) => (
-          <Button
-            variant="secondary"
-            size="sm"
-            className="hover:opacity-60 rounded-2xl border border-gray-400 dark:border-gray-600"
-            onClick={(e) => {
-              handleEmailClick(e, row.original);
-            }}>
-            {emailStrategies.includes(row.original.composer_id) ? (
-              <IconMailFilled style={{ width: 12, height: 12 }} />
-            ) : (
-              <IconMail style={{ width: 12, height: 12 }} />
+          <div className="flex gap-2 justify-end">
+            {headers.includes("email") && (
+              <ToolButton
+                tooltipText="receive email notification"
+                isSubscribed={emailStrategies.includes(
+                  row.original.composer_id
+                )}
+                className="hover:opacity-60 rounded-2xl border border-gray-400 dark:border-gray-600"
+                onClick={(e) => {
+                  handleEmailClick(e, row.original);
+                }}
+                FilledIcon={IconMailFilled}
+                Icon={IconMail}></ToolButton>
             )}
-          </Button>
-        ),
-      });
-    }
-    if (headers.includes("save")) {
-      columns.push({
-        accessorKey: "save",
-        header: "",
-        cell: ({ row }) => (
-          <Button
-            variant="secondary"
-            size="sm"
-            className="hover:opacity-60 rounded-2xl border border-gray-400 dark:border-gray-600"
-            onClick={(e) => {
-              handleSaveClicked(e, row.original);
-            }}>
-            {savedStrategies.includes(row.original.composer_id) ? (
-              <IconBookmarkFilled style={{ width: 12, height: 12 }} />
-            ) : (
-              <IconBookmark style={{ width: 12, height: 12 }} />
+            {headers.includes("save") && (
+              <ToolButton
+                tooltipText="save this strategy"
+                isSubscribed={savedStrategies.includes(
+                  row.original.composer_id
+                )}
+                className="hover:opacity-60 rounded-2xl border border-gray-400 dark:border-gray-600"
+                onClick={(e) => {
+                  handleSaveClicked(e, row.original);
+                }}
+                FilledIcon={IconBookmarkFilled}
+                Icon={IconBookmark}></ToolButton>
             )}
-          </Button>
+          </div>
         ),
       });
     }
@@ -183,47 +229,53 @@ export function StrategiesTable({
   };
 
   return (
-    <div className="rounded-md border">
-      <Table className="dark:bg-neutral-900">
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead
-                  key={header.id}
-                  className="border-gray-300 bg-gray-100 font-bold dark:bg-neutral-800 strategy-table-header">
-                  {flexRender(
-                    header.column.columnDef.header,
-                    header.getContext()
-                  )}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows.map((row) => (
-            <TableRow
-              onClick={() => handleRowClick(row)}
-              key={row.id}
-              className="hover:bg-muted/50 cursor-pointer">
-              {row.getVisibleCells().map((cell) => {
-                return (
-                  <TableCell
-                    className={
-                      ["email", "save"].includes(cell.column.id)
-                        ? "flex justify-end"
-                        : ""
-                    }
-                    key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                );
-              })}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <div>
+      <div className="fixed top-20 right-0">
+        <EmailAlert
+          strategies={alertEmailList}
+          setAlertEmailList={setAlertEmailList}
+        />
+      </div>
+
+      <div className="rounded-md border">
+        <Table className="dark:bg-neutral-900">
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead
+                    key={header.id}
+                    className="border-gray-300 bg-gray-100 font-bold dark:bg-neutral-800 strategy-table-header">
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow
+                onClick={() => handleRowClick(row)}
+                key={row.id}
+                className="hover:bg-muted/50 cursor-pointer">
+                {row.getVisibleCells().map((cell) => {
+                  return (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }

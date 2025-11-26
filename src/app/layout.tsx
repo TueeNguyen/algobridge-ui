@@ -8,6 +8,7 @@ import { ThemeProvider } from "./providers/themeProvider";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,11 +43,13 @@ export default function RootLayout({
               attribute="class"
               defaultTheme="system"
               disableTransitionOnChange>
-              <Header />
-              <Toaster />
-              <main className="p-4">
-                {children} <Analytics />
-              </main>
+              <TooltipProvider>
+                <Header />
+                <Toaster />
+                <main className="p-4">
+                  {children} <Analytics />
+                </main>
+              </TooltipProvider>
             </ThemeProvider>
           </QueryProvider>
         </ClerkProvider>
