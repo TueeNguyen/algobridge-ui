@@ -15,7 +15,10 @@ const updateStrategyEmail = async (
       method: "PATCH",
     });
 
-    const data = await res.json();
+    const data: {
+      composer_id: string;
+      subscribeStatus: boolean;
+    } = await res.json();
     return data;
   } catch (e) {
     console.error(e);

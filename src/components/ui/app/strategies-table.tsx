@@ -28,17 +28,13 @@ import {
 import { ArrowUpDown, Subscript } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useLocalStorage } from "usehooks-ts";
+import { useLocalStorage, useTimeout } from "usehooks-ts";
 import { useUser } from "@clerk/nextjs";
 import { getRegisteredEmailStrategyList } from "@/lib/getRegisteredEmailStrategyList";
 import updateStrategyEmail from "@/lib/registerDailyEmail";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@radix-ui/react-tooltip";
+
 import { ToolButton } from "./email-button";
-import { EmailAlert } from "./email-alert";
+import { EmailSubscriptionAlert } from "./email-alert";
 
 export type StrategiesTableHeaders =
   | "name"
@@ -51,17 +47,22 @@ export interface StrategiesTableProps {
   data: Strategy[];
 }
 
+export const NOTIFICATIONLISTNUM = 1;
+
 export function StrategiesTable({
   headers,
   data,
 }: StrategiesTableProps): React.ReactNode {
-  const [alertEmailList, setAlertEmailList] = useState<Strategy[]>([]);
+  const [alertSubscriptionNotification, setAlertSubscriptionNotification] =
+    useState<AlertSubscriptionNotification[]>([]);
 
   const [userEmail, setUserEmail] = useState<string | undefined>();
   const { isSignedIn, isLoaded, user } = useUser();
+  const [sorting, setSorting] = useState<SortingState>([]);
+
   if ((!isSignedIn && !isLoaded) || !user) {
-    headers = headers.filter((x) => x !== "email");
     // setting user email
+    headers = headers.filter((x) => x !== "email");
   }
   // email and saved strategies
   const [emailStrategies, setEmailStrategies] = useState<string[]>([]);
@@ -74,7 +75,7 @@ export function StrategiesTable({
       initializeWithValue: false,
     }
   );
-
+  // user email
   useEffect(() => {
     if (user?.primaryEmailAddress?.emailAddress) {
       setUserEmail(user.primaryEmailAddress.emailAddress);
@@ -101,29 +102,36 @@ export function StrategiesTable({
         strategy.composer_id
       );
       // update strategy
-      const { subscribeStatus } = await updateStrategyEmail(
+      const updateStatus = await updateStrategyEmail(
         userEmail,
         strategy.composer_id,
         !isCurrentlySubscribed
       );
+      const subscribeStatus = updateStatus?.subscribeStatus ?? false;
 
       if (!subscribeStatus) {
+        // removing strategy from the subscribed email list
         setEmailStrategies((prev) =>
           prev.filter((id) => id !== strategy.composer_id)
         );
-        return;
+      } else {
+        setEmailStrategies((prev) => [...prev, strategy.composer_id]);
       }
-      setEmailStrategies((prev) => [...prev, strategy.composer_id]);
 
-      setAlertEmailList((prev) => {
-        if (prev.length >= 2) {
-          return [...prev.slice(0, -1), strategy];
+      // set email alert
+      setAlertSubscriptionNotification((prev) => {
+        if (prev.length >= NOTIFICATIONLISTNUM) {
+          return [
+            ...prev.slice(0, -1),
+            { strategy: strategy, subscribe: subscribeStatus },
+          ];
         }
-        return [...prev, strategy];
+        return [...prev, { strategy: strategy, subscribe: subscribeStatus }];
       });
     }
   };
 
+  // handling saved click (local storage)
   const handleSaveClicked = (e: React.MouseEvent, strategy: Strategy) => {
     e.stopPropagation();
     if (savedStrategies.includes(strategy.composer_id)) {
@@ -210,8 +218,6 @@ export function StrategiesTable({
     return columns;
   };
 
-  const [sorting, setSorting] = useState<SortingState>([]);
-
   const table = useReactTable({
     data,
     columns: getColumns(),
@@ -231,9 +237,9 @@ export function StrategiesTable({
   return (
     <div>
       <div className="fixed top-20 right-0">
-        <EmailAlert
-          strategies={alertEmailList}
-          setAlertEmailList={setAlertEmailList}
+        <EmailSubscriptionAlert
+          alertSubscriptionNotification={alertSubscriptionNotification}
+          setAlertSubscriptionNotification={setAlertSubscriptionNotification}
         />
       </div>
 
