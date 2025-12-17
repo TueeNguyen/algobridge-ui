@@ -28,7 +28,7 @@ export const EmailSubscriptionAlert = ({
     <>
       {alertSubscriptionNotification.map((notification) => {
         const { strategy, subscribe } = notification;
-        return (
+        return (                 
           <Alert
             key={strategy.composer_id + subscribe}
             className="relative flex justify-between mt-2 border-none bg-green-600/10 text-green-600 dark:bg-green-400/10 dark:text-green-400">

@@ -19,13 +19,7 @@ export default async function Home({
   if (page) {
     url.searchParams.append("page", page.toString());
   }
-  const { userId } = await auth();
-  console.log(userId);
-  const result = await fetch(url, {
-    headers: {
-      "user_id": userId || "",
-    },
-  });
+  const result = await fetch(url);
   const searchResult: SearchResult = await result.json();
 
   // console.debug("Fetched search result:", searchResult);

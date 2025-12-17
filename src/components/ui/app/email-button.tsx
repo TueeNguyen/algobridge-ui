@@ -1,7 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 
-import { IconMailFilled, IconMail } from "@tabler/icons-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../tooltip";
 
 interface EmailButtonProps {
