@@ -21,13 +21,13 @@ export default function SignInOrOutButton({}) {
             onClick={(e) => {
               if (e.target === e.currentTarget) setToggle(false);
             }}>
-            <Button
+            {/* <Button
               className="absolute top-56 right-190 z-[60] bg-red-300 hover:bg-red-400"
               onClick={() => setToggle(false)}
               aria-label="Close dialog"
               size="icon">
               ✕
-            </Button>
+            </Button> */}
 
             <SignIn routing="hash" />
           </div>
