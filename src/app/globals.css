@@ -44,6 +44,7 @@
 }
 
 :root {
+  --animate-shrink: shrink 5s linear forwards;
   --radius: 0.625rem;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -76,6 +77,19 @@
   --sidebar-ring: oklch(0.708 0 0);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
+}
+
+@keyframes shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.alert-progress {
+  animation: var(--animate-shrink);
 }
 
 .dark {

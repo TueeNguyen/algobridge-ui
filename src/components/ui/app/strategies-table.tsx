@@ -10,7 +10,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDate } from "@/lib/utils";
-import { IconBookmark, IconBookmarkFilled } from "@tabler/icons-react";
+import {
+  IconBookmark,
+  IconBookmarkFilled,
+  IconMail,
+  IconMailFilled,
+} from "@tabler/icons-react";
 import {
   ColumnDef,
   Row,
@@ -20,19 +25,49 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, Subscript } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useLocalStorage } from "usehooks-ts";
+import { useEffect, useState } from "react";
+import { useLocalStorage, useTimeout } from "usehooks-ts";
+import { useUser } from "@clerk/nextjs";
+import { getRegisteredEmailStrategyList } from "@/lib/getRegisteredEmailStrategyList";
+import updateStrategyEmail from "@/lib/registerDailyEmail";
 
-export type StrategiesTableHeaders = "name" | "composer_created_at" | "tools";
+import { ToolButton } from "./email-button";
+import { EmailSubscriptionAlert } from "./email-alert";
+
+export type StrategiesTableHeaders =
+  | "name"
+  | "composer_created_at"
+  | "email"
+  | "save";
 
 export interface StrategiesTableProps {
   headers: StrategiesTableHeaders[];
   data: Strategy[];
 }
 
-export function StrategiesTable({ headers, data }: StrategiesTableProps) {
+export const NOTIFICATIONLISTNUM = 1;
+
+export function StrategiesTable({
+  headers,
+  data,
+}: StrategiesTableProps): React.ReactNode {
+  const [alertSubscriptionNotification, setAlertSubscriptionNotification] =
+    useState<AlertSubscriptionNotification[]>([]);
+
+  const [userEmail, setUserEmail] = useState<string | undefined>();
+  const { isSignedIn, isLoaded, user } = useUser();
+  const [sorting, setSorting] = useState<SortingState>([]);
+
+  if ((!isSignedIn && !isLoaded) || !user) {
+    // setting user email
+    headers = headers.filter((x) => x !== "email");
+  }
+  // email and saved strategies
+  const [emailStrategies, setEmailStrategies] = useState<string[]>([]);
+  console.log(emailStrategies);
+
   const [savedStrategies, setSavedStrategies] = useLocalStorage<string[]>(
     "savedStrategies",
     [],
@@ -40,7 +75,63 @@ export function StrategiesTable({ headers, data }: StrategiesTableProps) {
       initializeWithValue: false,
     }
   );
+  // user email
+  useEffect(() => {
+    if (user?.primaryEmailAddress?.emailAddress) {
+      setUserEmail(user.primaryEmailAddress.emailAddress);
+    }
+  }, [user]);
+  // fetching list of email that user want to receive email notification from
+  useEffect(() => {
+    const fetchEmailStrategies = async () => {
+      const emailStrategyList: string[] | undefined =
+        await getRegisteredEmailStrategyList(userEmail);
+      if (emailStrategyList) setEmailStrategies(emailStrategyList);
+    };
 
+    fetchEmailStrategies();
+  }, [userEmail]);
+
+  // Handling tools click (email, tool)
+  const handleEmailClick = async (e: React.MouseEvent, strategy: Strategy) => {
+    if (headers.includes("email") && userEmail) {
+      e.stopPropagation();
+
+      // perdicate whether to sub or unsub
+      const isCurrentlySubscribed = emailStrategies.includes(
+        strategy.composer_id
+      );
+      // update strategy
+      const updateStatus = await updateStrategyEmail(
+        userEmail,
+        strategy.composer_id,
+        !isCurrentlySubscribed
+      );
+      const subscribeStatus = updateStatus?.subscribeStatus ?? false;
+
+      if (!subscribeStatus) {
+        // removing strategy from the subscribed email list
+        setEmailStrategies((prev) =>
+          prev.filter((id) => id !== strategy.composer_id)
+        );
+      } else {
+        setEmailStrategies((prev) => [...prev, strategy.composer_id]);
+      }
+
+      // set email alert
+      setAlertSubscriptionNotification((prev) => {
+        if (prev.length >= NOTIFICATIONLISTNUM) {
+          return [
+            ...prev.slice(0, -1),
+            { strategy: strategy, subscribe: subscribeStatus },
+          ];
+        }
+        return [...prev, { strategy: strategy, subscribe: subscribeStatus }];
+      });
+    }
+  };
+
+  // handling saved click (local storage)
   const handleSaveClicked = (e: React.MouseEvent, strategy: Strategy) => {
     e.stopPropagation();
     if (savedStrategies.includes(strategy.composer_id)) {
@@ -52,6 +143,7 @@ export function StrategiesTable({ headers, data }: StrategiesTableProps) {
     setSavedStrategies((prev) => [...prev, strategy.composer_id]);
   };
 
+  // COLUMNS
   const getColumns = () => {
     const columns: ColumnDef<Strategy>[] = [];
     if (headers.includes("name")) {
@@ -60,8 +152,9 @@ export function StrategiesTable({ headers, data }: StrategiesTableProps) {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
+            onClick={() =>
+              column.toggleSorting(column.getIsSorted() === "asc")
+            }>
             Name
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
@@ -74,8 +167,9 @@ export function StrategiesTable({ headers, data }: StrategiesTableProps) {
         header: ({ column }) => (
           <Button
             variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
+            onClick={() =>
+              column.toggleSorting(column.getIsSorted() === "asc")
+            }>
             Out of Sample Date
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
@@ -84,32 +178,45 @@ export function StrategiesTable({ headers, data }: StrategiesTableProps) {
       });
     }
 
-    if (headers.includes("tools")) {
+    // Combine email and save into one actions column
+    if (headers.includes("email") || headers.includes("save")) {
       columns.push({
-        accessorKey: "tools",
+        id: "actions",
         header: "",
         cell: ({ row }) => (
-          <Button
-            variant="secondary"
-            size="sm"
-            className="hover:opacity-60 rounded-2xl border border-gray-400 dark:border-gray-600"
-            onClick={(e) => {
-              handleSaveClicked(e, row.original);
-            }}
-          >
-            {savedStrategies.includes(row.original.composer_id) ? (
-              <IconBookmarkFilled style={{ width: 12, height: 12 }} />
-            ) : (
-              <IconBookmark style={{ width: 12, height: 12 }} />
+          <div className="flex gap-2 justify-end">
+            {headers.includes("email") && (
+              <ToolButton
+                tooltipText="receive email notification"
+                isSubscribed={emailStrategies.includes(
+                  row.original.composer_id
+                )}
+                className="hover:opacity-60 rounded-2xl border border-gray-400 dark:border-gray-600"
+                onClick={(e) => {
+                  handleEmailClick(e, row.original);
+                }}
+                FilledIcon={IconMailFilled}
+                Icon={IconMail}></ToolButton>
             )}
-          </Button>
+            {headers.includes("save") && (
+              <ToolButton
+                tooltipText="save this strategy"
+                isSubscribed={savedStrategies.includes(
+                  row.original.composer_id
+                )}
+                className="hover:opacity-60 rounded-2xl border border-gray-400 dark:border-gray-600"
+                onClick={(e) => {
+                  handleSaveClicked(e, row.original);
+                }}
+                FilledIcon={IconBookmarkFilled}
+                Icon={IconBookmark}></ToolButton>
+            )}
+          </div>
         ),
       });
     }
     return columns;
   };
-
-  const [sorting, setSorting] = useState<SortingState>([]);
 
   const table = useReactTable({
     data,
@@ -128,48 +235,53 @@ export function StrategiesTable({ headers, data }: StrategiesTableProps) {
   };
 
   return (
-    <div className="rounded-md border">
-      <Table className="dark:bg-neutral-900">
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead
-                  key={header.id}
-                  className="border-gray-300 bg-gray-100 font-bold dark:bg-neutral-800 strategy-table-header"
-                >
-                  {flexRender(
-                    header.column.columnDef.header,
-                    header.getContext()
-                  )}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows.map((row) => (
-            <TableRow
-              onClick={() => handleRowClick(row)}
-              key={row.id}
-              className="hover:bg-muted/50 cursor-pointer"
-            >
-              {row.getVisibleCells().map((cell) => {
-                return (
-                  <TableCell
-                    className={
-                      cell.column.id === "tools" ? "flex justify-end" : ""
-                    }
-                    key={cell.id}
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                );
-              })}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <div>
+      <div className="fixed top-20 right-0">
+        <EmailSubscriptionAlert
+          alertSubscriptionNotification={alertSubscriptionNotification}
+          setAlertSubscriptionNotification={setAlertSubscriptionNotification}
+        />
+      </div>
+
+      <div className="rounded-md border">
+        <Table className="dark:bg-neutral-900">
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead
+                    key={header.id}
+                    className="border-gray-300 bg-gray-100 font-bold dark:bg-neutral-800 strategy-table-header">
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow
+                onClick={() => handleRowClick(row)}
+                key={row.id}
+                className="hover:bg-muted/50 cursor-pointer">
+                {row.getVisibleCells().map((cell) => {
+                  return (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
