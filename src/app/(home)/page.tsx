@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { TablePagination } from "./pagination";
 import { Search } from "./search";
 import { StrategiesTable } from "@/components/ui/app/strategies-table";
-
+import { auth } from "@clerk/nextjs/server";
 export default async function Home({
   searchParams,
 }: {
@@ -19,9 +19,9 @@ export default async function Home({
   if (page) {
     url.searchParams.append("page", page.toString());
   }
-
   const result = await fetch(url);
   const searchResult: SearchResult = await result.json();
+
   // console.debug("Fetched search result:", searchResult);
   return (
     <div className="flex flex-col gap-4 mx-auto">
@@ -31,7 +31,7 @@ export default async function Home({
       <Search />
       <Suspense fallback={<p>Loading strategies...</p>}>
         <StrategiesTable
-          headers={["name", "composer_created_at", "tools"]}
+          headers={["name", "composer_created_at", "email", "save"]}
           data={searchResult.data}
         />
         <TablePagination searchResult={searchResult} />
