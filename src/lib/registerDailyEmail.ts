@@ -6,7 +6,8 @@ const updateStrategyEmail = async (
   // TODO: implementing sending api request to backend to register user for sending
   const url = new URL(
     `/api/external/strategies/${composer_id}/subscribed-notification`,
-    process.env.NEXT_PUBLIC_API_URL
+    process.env.NEXT_PUBLIC_BASE_URL
+    
   );
   try {
     url.searchParams.append("email", email);
