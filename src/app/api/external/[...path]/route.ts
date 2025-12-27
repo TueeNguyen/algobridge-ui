@@ -46,6 +46,9 @@ const proxyRequest = async (
       headers: {
         "Content-Type":
           response.headers.get("Content-Type") || "application/json",
+        "Access-Control-Allow-Origin": process.env.NEXT_PUBLIC_BASE_URL || "",
+       "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
+       "Access-Control-Allow-Headers": "*",
       },
     });
   } catch (error) {
