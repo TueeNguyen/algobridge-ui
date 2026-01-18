@@ -28,23 +28,43 @@ export const EmailSubscriptionAlert = ({
     <>
       {alertSubscriptionNotification.map((notification) => {
         const { strategy, subscribe } = notification;
-        return (                 
+        return (
           <Alert
             key={strategy.composer_id + subscribe}
-            className="relative flex justify-between mt-2 border-none bg-green-600/10 text-green-600 dark:bg-green-400/10 dark:text-green-400">
+            className={`relative flex justify-between mt-2 border-none ${
+              subscribe
+                ? "bg-green-600/10 text-green-600 dark:bg-green-400/10 dark:text-green-400"
+                : "bg-orange-600/10 text-orange-600 dark:bg-orange-400/10 dark:text-orange-400"
+            }`}>
             <CircleAlertIcon />
 
             {/* ui feedbacks for auto close */}
-            <div className="alert-progress absolute bottom-0 left-0 h-1 bg-green-600 dark:bg-green-400" />
+            <div
+              className={`alert-progress absolute bottom-0 left-0 h-1 ${
+                subscribe
+                  ? "bg-green-600 dark:bg-green-400"
+                  : "bg-orange-600 dark:bg-orange-400"
+              }`}
+            />
 
             <div className="flex-1 flex-col justify-center gap-1">
               <AlertTitle>
-                you have {subscribe ? "subscribe" : "unsubscribe"} for{" "}
+                You have {subscribe ? "subscribed to" : "unsubscribed from"}{" "}
                 {strategy.name}
               </AlertTitle>
               <AlertDescription>
-                Information about{" "}
-                <span className="font-bold">{strategy.name}</span> will be sent
+                {subscribe ? (
+                  <>
+                    Updates about{" "}
+                    <span className="font-bold">{strategy.name}</span> will be
+                    sent to your email
+                  </>
+                ) : (
+                  <>
+                    You will no longer receive updates about{" "}
+                    <span className="font-bold">{strategy.name}</span>
+                  </>
+                )}
               </AlertDescription>
             </div>
             <button
@@ -52,8 +72,8 @@ export const EmailSubscriptionAlert = ({
               onClick={() =>
                 setAlertSubscriptionNotification((prev) =>
                   prev.filter(
-                    (s) => s.strategy.composer_id !== strategy.composer_id
-                  )
+                    (s) => s.strategy.composer_id !== strategy.composer_id,
+                  ),
                 )
               }>
               <XIcon className="size-5" />

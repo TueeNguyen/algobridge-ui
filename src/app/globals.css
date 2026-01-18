@@ -144,3 +144,23 @@
 .strategy-table-header  > button{
   padding: 0 !important;
 }
+
+.custom-screen {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .custom-screen {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+}
+
+.custom-btn-bg {
+  background-image: linear-gradient(135deg, rgba(124, 58, 237, 0.85) 0%, rgba(59, 130, 246, 0.85) 100%);
+}

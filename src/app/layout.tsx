@@ -46,7 +46,7 @@ export default function RootLayout({
               <TooltipProvider>
                 <Header />
                 <Toaster />
-                <main className="p-4">
+                <main className="">
                   {children} <Analytics />
                 </main>
               </TooltipProvider>

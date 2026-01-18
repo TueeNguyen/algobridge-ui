@@ -1,12 +1,20 @@
 "use client";
 
 import { SignIn, SignOutButton, useUser } from "@clerk/nextjs";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "./ui/button";
 
 export default function SignInOrOutButton({}) {
   const [toggle, setToggle] = useState<boolean>(false);
+  const [mounted, setMounted] = useState<boolean>(false);
   const { isSignedIn, isLoaded, user } = useUser();
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
   if (!isLoaded) return;
   //   sign-in button
   //   different than clerk provided SignInButton
@@ -15,23 +23,20 @@ export default function SignInOrOutButton({}) {
       <>
         <Button onClick={() => setToggle(true)}>Sign In</Button>
 
-        {toggle && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/30"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setToggle(false);
-            }}>
-            {/* <Button
-              className="absolute top-56 right-190 z-[60] bg-red-300 hover:bg-red-400"
-              onClick={() => setToggle(false)}
-              aria-label="Close dialog"
-              size="icon">
-              ✕
-            </Button> */}
-
-            <SignIn routing="hash" />
-          </div>
-        )}
+        {toggle &&
+          mounted &&
+          createPortal(
+            <div
+              className="fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-md bg-black/50"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) setToggle(false);
+              }}>
+              <div className="relative">
+                <SignIn routing="hash" forceRedirectUrl={"/strategies"} />
+              </div>
+            </div>,
+            document.body,
+          )}
       </>
     );
   };
@@ -39,7 +44,7 @@ export default function SignInOrOutButton({}) {
   const SignOutButtonWrap = () => {
     return (
       <Button variant="destructive">
-        <SignOutButton />
+        <SignOutButton redirectUrl="/strategies" />
       </Button>
     );
   };

@@ -1,41 +1,16 @@
-import { Suspense } from "react";
-import { TablePagination } from "./pagination";
-import { Search } from "./search";
-import { StrategiesTable } from "@/components/ui/app/strategies-table";
-import { auth } from "@clerk/nextjs/server";
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<{ name?: string; page?: number }>;
-}) {
-  const { name, page } = await searchParams;
-  const url = new URL(
-    "/api/external/strategies/search",
-    process.env.NEXT_PUBLIC_BASE_URL
-  );
-  if (name) {
-    url.searchParams.append("name", name);
-  }
-  if (page) {
-    url.searchParams.append("page", page.toString());
-  }
-  const result = await fetch(url);
-  const searchResult: SearchResult = await result.json();
+import Hero from "@/components/landingPageUi/Hero";
 
-  // console.debug("Fetched search result:", searchResult);
+import Footer from "@/components/landingPageUi/Footer";
+
+export default function Home() {
   return (
-    <div className="flex flex-col gap-4 mx-auto">
-      <h2 className="scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0">
-        Strategies
-      </h2>
-      <Search />
-      <Suspense fallback={<p>Loading strategies...</p>}>
-        <StrategiesTable
-          headers={["name", "composer_created_at", "email", "save"]}
-          data={searchResult.data}
-        />
-        <TablePagination searchResult={searchResult} />
-      </Suspense>
+    <div className="relative min-h-screen overflow-hidden bg-gray-950 text-gray-200">
+      <div className="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_top,_rgba(124,58,237,0.35),_transparent_65%)]" />
+      <div className="absolute left-1/2 top-[-12%] -z-10 h-[540px] w-[540px] -translate-x-1/2 rounded-full bg-indigo-500/15 blur-3xl" />
+      <main className="flex flex-col gap-2 pb-24">
+        <Hero />
+      </main>
+      <Footer />
     </div>
   );
 }
